@@ -10,15 +10,12 @@ import (
 	"github.com/joho/godotenv"
 
 	"./authentication"
+	"./database"
 )
 
-type Token struct {
-	token string
-}
-
 func addReminder(w http.ResponseWriter, r *http.Request) {
-	var placeholder string
-	err := json.NewDecoder(r.Body).Decode(&placeholder)
+	var request string
+	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -26,11 +23,11 @@ func addReminder(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(placeholder)
+	json.NewEncoder(w).Encode(request)
 }
 func editReminder(w http.ResponseWriter, r *http.Request) {
-	var placeholder string
-	err := json.NewDecoder(r.Body).Decode(&placeholder)
+	var request string
+	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -38,12 +35,12 @@ func editReminder(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(placeholder)
+	json.NewEncoder(w).Encode(request)
 
 }
 func deleteReminder(w http.ResponseWriter, r *http.Request) {
-	var placeholder string
-	err := json.NewDecoder(r.Body).Decode(&placeholder)
+	var request string
+	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -51,11 +48,11 @@ func deleteReminder(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(placeholder)
+	json.NewEncoder(w).Encode(request)
 
 }
 func getReminders(w http.ResponseWriter, r *http.Request) {
-	var placeholder Token
+	var placeholder authentication.Token
 
 	err := authentication.ValidateToken(r.Header.Get("Authorization"))
 	if err != nil {
@@ -88,15 +85,20 @@ func getUserToken(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(token)
 }
 func addUser(w http.ResponseWriter, r *http.Request) {
-	var token string
-	err := json.NewDecoder(r.Body).Decode(&token)
+	var request User
+	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	//err := authentication.ValidateToken(token)
+	err = database.Register_user(request.Name, request.Password, request.Email)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
@@ -105,7 +107,7 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 func getUser(w http.ResponseWriter, r *http.Request) {}
 
 func main() {
-	err := godotenv.Load("./.env")
+	err := godotenv.Load("./.env", "./database/.env")
 	if err != nil {
 		log.Fatal("Error loading .env file", err)
 	}
