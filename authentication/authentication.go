@@ -9,6 +9,8 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/joho/godotenv"
+
+	"../database"
 )
 
 type MyCustomClaims struct {
@@ -16,21 +18,26 @@ type MyCustomClaims struct {
 	jwt.StandardClaims
 }
 
-func GenerateToken() (string, error) {
+func GenerateToken(user User) (string, error) {
 	err := godotenv.Load("./.env")
 	if err != nil {
 		return "", fmt.Errorf("Error loading .env file: %v", err)
 	}
 
+	loggedUser, err := database.Get_user(user.Name, user.Password)
+	if err != nil {
+		return "", err
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, MyCustomClaims{
-		"thisIsAnUserTest",
+		loggedUser.Name,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 60).Unix(),
 			Issuer:    "endpointValidateGo",
 		},
 	})
 
-	signedToken, err := token.SignedString([]byte(os.Getenv("secret")))
+	signedToken, err := token.SignedString([]byte(loggedUser.Secret))
 	if err != nil {
 		return "", fmt.Errorf("Error signing the token: %v", err)
 	}

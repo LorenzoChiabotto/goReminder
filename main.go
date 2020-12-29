@@ -73,10 +73,17 @@ func getReminders(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUserToken(w http.ResponseWriter, r *http.Request) {
-	token, err := authentication.GenerateToken()
+	var request authentication.User
+	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Fatal(err)
+		return
+	}
+
+	token, err := authentication.GenerateToken(request)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Println(err)
 		return
 	}
 

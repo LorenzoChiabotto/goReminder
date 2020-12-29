@@ -7,6 +7,6 @@ type Token struct {
 }
 
 type User struct {
-	name  string
-	email string
+	Name     string
+	Password string
 }
