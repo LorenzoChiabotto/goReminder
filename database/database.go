@@ -57,6 +57,9 @@ func Get_secret(username string) (*string, error) {
 	if result.Error != nil {
 		return nil, fmt.Errorf("Invalid credentials")
 	}
+	if result.RowsAffected == 0 {
+		return nil, fmt.Errorf("Invalid credentials")
+	}
 	return &(user.Secret), nil
 }
 
