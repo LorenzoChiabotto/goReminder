@@ -3,12 +3,10 @@ package authentication
 import (
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/joho/godotenv"
 
 	"../database"
 )
@@ -19,11 +17,6 @@ type MyCustomClaims struct {
 }
 
 func GenerateToken(user User) (string, error) {
-	err := godotenv.Load("./.env")
-	if err != nil {
-		return "", fmt.Errorf("Error loading .env file: %v", err)
-	}
-
 	loggedUser, err := database.Get_user(user.Name, user.Password)
 	if err != nil {
 		return "", err
@@ -45,24 +38,26 @@ func GenerateToken(user User) (string, error) {
 }
 
 func ValidateToken(receivedToken string) error {
-	err := godotenv.Load("./.env")
 	splittedToken := strings.Split(receivedToken, " ")
 	if len(splittedToken) != 2 {
 		return fmt.Errorf("Invalid token structure: %v", receivedToken)
 	}
 
-	token, err := jwt.Parse(splittedToken[1], func(token *jwt.Token) (interface{}, error) {
+	_, err := jwt.Parse(splittedToken[1], func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
+		claims, ok := token.Claims.(jwt.MapClaims)
+		secret, err := database.Get_secret(claims["user"].(string))
 
-		return []byte(os.Getenv("secret")), nil
+		if err != nil {
+			return nil, fmt.Errorf("Invalid token: %v", err)
+		}
+
+		return []byte(*secret), nil
 	})
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		log.Println(claims)
-	}
 	if err != nil {
 		log.Println(err)
 		return err

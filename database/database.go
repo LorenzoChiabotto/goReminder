@@ -11,10 +11,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func Get_user(name string, password string) (*Users, error) {
+func connect_database() (*gorm.DB, error) {
 	num, err := strconv.Atoi((os.Getenv("dbPort")))
 	if err != nil {
-		log.Fatal("Error parsing port", err)
+		log.Fatalf("Error parsing port: %v", err)
 	}
 
 	query := url.Values{}
@@ -25,7 +25,11 @@ func Get_user(name string, password string) (*Users, error) {
 		Host:     fmt.Sprintf("%s:%d", os.Getenv("dbServer"), num),
 		RawQuery: query.Encode(),
 	}
-	db, err := gorm.Open(sqlserver.Open(u.String()), &gorm.Config{})
+	return gorm.Open(sqlserver.Open(u.String()), &gorm.Config{})
+}
+
+func Get_user(name string, password string) (*Users, error) {
+	db, err := connect_database()
 	if err != nil {
 		return nil, err
 	}
@@ -42,21 +46,22 @@ func Get_user(name string, password string) (*Users, error) {
 	return &user, nil
 }
 
-func Register_user(name string, password string, email string) error {
-	num, err := strconv.Atoi((os.Getenv("dbPort")))
+func Get_secret(username string) (*string, error) {
+	db, err := connect_database()
 	if err != nil {
-		log.Fatal("Error parsing port", err)
+		return nil, err
 	}
 
-	query := url.Values{}
-	query.Add("database", os.Getenv("db"))
-	u := &url.URL{
-		Scheme:   "sqlserver",
-		User:     url.UserPassword(os.Getenv("dbUser"), os.Getenv("dbPassword")),
-		Host:     fmt.Sprintf("%s:%d", os.Getenv("dbServer"), num),
-		RawQuery: query.Encode(),
+	var user Users
+	result := db.First(&user, "name = ? ", username)
+	if result.Error != nil {
+		return nil, fmt.Errorf("Invalid credentials")
 	}
-	db, err := gorm.Open(sqlserver.Open(u.String()), &gorm.Config{})
+	return &(user.Secret), nil
+}
+
+func Register_user(name string, password string, email string) error {
+	db, err := connect_database()
 	if err != nil {
 		return err
 	}
