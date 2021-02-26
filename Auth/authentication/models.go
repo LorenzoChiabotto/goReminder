@@ -1,12 +1,13 @@
 package authentication
 
+//Token represents one token
 type Token struct {
-	token         string
-	refresh_token string
-	expires_in    int
+	Token        string
+	ExpiresIn    int64
 }
 
 type User struct {
 	Name     string
 	Password string
 }
+

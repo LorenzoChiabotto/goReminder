@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func connect_database() (*gorm.DB, error) {
-	num, err := strconv.Atoi((os.Getenv("dbPort")))
+func connectDatabase() (*gorm.DB, error) {
+	num, err := strconv.Atoi(os.Getenv("dbPort"))
 	if err != nil {
 		log.Fatalf("Error parsing port: %v", err)
 	}
@@ -28,8 +28,9 @@ func connect_database() (*gorm.DB, error) {
 	return gorm.Open(sqlserver.Open(u.String()), &gorm.Config{})
 }
 
-func Get_user(name string, password string) (*Users, error) {
-	db, err := connect_database()
+//GetUser retrieves an user with name a pw
+func GetUser(name string, password string) (*Users, error) {
+	db, err := connectDatabase()
 	if err != nil {
 		return nil, err
 	}
@@ -40,14 +41,15 @@ func Get_user(name string, password string) (*Users, error) {
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return nil, fmt.Errorf("Invalid credentials")
+		return nil, fmt.Errorf("invalid credentials")
 	}
 
 	return &user, nil
 }
 
-func Get_secret(username string) (*string, error) {
-	db, err := connect_database()
+//GetSecret retrieves the token for a username
+func GetSecret(username string) (*string, error) {
+	db, err := connectDatabase()
 	if err != nil {
 		return nil, err
 	}
@@ -55,28 +57,10 @@ func Get_secret(username string) (*string, error) {
 	var user Users
 	result := db.First(&user, "name = ? ", username)
 	if result.Error != nil {
-		return nil, fmt.Errorf("Invalid credentials")
+		return nil, fmt.Errorf("invalid credentials")
 	}
 	if result.RowsAffected == 0 {
-		return nil, fmt.Errorf("Invalid credentials")
+		return nil, fmt.Errorf("invalid credentials")
 	}
 	return &(user.Secret), nil
-}
-
-func Register_user(name string, password string, email string) error {
-	db, err := connect_database()
-	if err != nil {
-		return err
-	}
-
-	user := Users{
-		Name:     name,
-		Password: password,
-		Email:    email,
-		Secret:   "This is a Placeholder",
-	}
-
-	result := db.Create(&user)
-
-	return result.Error
 }
