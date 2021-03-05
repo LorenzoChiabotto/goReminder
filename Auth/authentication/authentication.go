@@ -11,6 +11,7 @@ import (
 //MyCustomClaims defines claims for the token
 type MyCustomClaims struct {
 	User string `json:"user"`
+	UserId string `json:"userId"`
 	jwt.StandardClaims
 }
 
@@ -26,8 +27,10 @@ func GenerateToken(user User) (*Token, error) {
 
 	key := []byte("this_is_a_test_key_that_must_be_replaced_in_prod")
 
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, MyCustomClaims{
 		loggedUser.Name,
+		loggedUser.ID.String(),
 		jwt.StandardClaims{
 			ExpiresAt: expirationTime,
 			Issuer:   issuer,

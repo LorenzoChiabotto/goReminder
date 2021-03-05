@@ -1,20 +1,19 @@
 package main
 
+import "time"
+
 //AddReminderRequest represents a request to create a reminder
 type AddReminderRequest struct {
-	Day              string
-	NotificationTime string
+	Day              time.Time
 	Repeat           bool
 	Message          string
-	Token            string
 }
 
 
 //PutReminderRequest represents a request to edit a reminder
 type PutReminderRequest struct {
 	ID              string
-	Day              string
-	NotificationTime string
+	Day              time.Time
 	Repeat           bool
 	Message          string
 	Token            string

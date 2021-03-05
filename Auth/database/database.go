@@ -44,6 +44,8 @@ func GetUser(name string, password string) (*Users, error) {
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
+	log.Print(&user)
+
 	return &user, nil
 }
 
